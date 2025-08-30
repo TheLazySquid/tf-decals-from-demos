@@ -1,0 +1,11 @@
+[package]
+name = "tf-decals-from-demo"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+tf-demo-parser = { git = "https://codeberg.org/demostf/parser", version = "0.7.0" }
+wasm-bindgen = "0.2"

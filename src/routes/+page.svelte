@@ -1,19 +1,17 @@
 <script lang="ts">
-	import { parse_demo } from "tf-decals-from-demo";
+    import { parseFiles } from "$lib/parser";
 
 	let fileInput: HTMLInputElement;
-	let output = $state("");
-	async function parseFile() {
-		const file = fileInput.files?.[0];
-		if(!file) return;
+	let ids: string[] = $state([]);
 
-		const buffer = await file.arrayBuffer();
-		const result = parse_demo(new Uint8Array(buffer));
-		if(result) output = "Decal ids: " + result.join(", ");
-		else output = "Failed to parse demo";
+	async function parseFile() {
+		if(!fileInput.files) return;
+		
+		parseFiles(fileInput.files, (id) => ids.push(id));
 	}
 </script>
 
-<input type="file" class="cursor-pointer" accept=".dem"
+<input type="file" class="cursor-pointer" accept=".dem" multiple
 	bind:this={fileInput} onchange={parseFile} />
-{output}
+
+{ids.join(", ")}

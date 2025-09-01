@@ -22,7 +22,8 @@ export function parseFiles(fileList: File[], onParsed: (parsed: ParsedDemo) => v
 			worker.onmessage = (event) => {
 				onParsed({
 					name: file!.name,
-					ids: event.data
+					ids: event.data,
+					urls: []
 				});
 	
 				file = files.pop();

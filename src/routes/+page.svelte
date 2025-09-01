@@ -4,9 +4,10 @@
 
 	let dropping = $state(false);
 	let files: File[] = $state([]);
-	let steamApiKey = $state("");
-	let steamApiInfoOpen = $state(false);
 	let parsed = $state(0);
+
+	let steamApiInfoOpen = $state(false);
+	let steamApiKey = $state("");
 
 	function setFiles(list?: FileList | null) {
 		if (!list) return;
@@ -49,6 +50,8 @@
 	let output: ParsedDemo[] = $state([]);
 
 	function startParse() {
+		if(parsing) return;
+
 		parsing = true;
 		parsed = 0;
 		output = [];
@@ -64,12 +67,13 @@
 	<div class="text-gray-200 pr-4">
 		<p>
 			Demos only store the ids of decals, rather than the actual image on the decal.
-			In order to convert the ids into useful images, the
+			In order to convert the ids into useful images the
 			<a href="https://partner.steamgames.com/doc/webapi/ISteamRemoteStorage#GetUGCFileDetails"
 				class="underline" target="_blank">
 				Steam API
 			</a>
-			needs to be used. Your Steam API key will not be stored or sent anywhere aside from the Steam API.
+			needs to be used. Unfortunately, this process cannot be automated in the browser due to CORS restrictions.
+			The best that can be done is to link to the api endpoint for each decal, which will include a link to the image.
 		</p>
 		<p class="mt-4">
 			You can get a Steam API key by following
@@ -77,8 +81,7 @@
 				class="underline" target="_blank">
 				this link
 			</a>
-			and signing in with your Steam account.
-			Without the API key this tool can still extract only the decal ids if you wish.
+			and signing in with your Steam account. The domain you enter does not matter.
 		</p>
 	</div>
 </Modal>
@@ -88,14 +91,21 @@
 		<div class="border-b px-2 {demo.ids ? "bg-slate-700" : "bg-red-900"}">
 			{ demo.name }
 		</div>
-		<div class="px-2 py-2">
+		<div class="px-2 py-2 flex flex-col">
 			{#if !demo.ids}
 				Failed to parse demo.
 			{:else if demo.ids.length === 0}
 				No decals found.
 			{:else}
 				{#each demo.ids as id}
-					<p>{ id }</p>
+					{#if steamApiKey}
+						<a href="https://api.steampowered.com/ISteamRemoteStorage/GetUGCFileDetails/v1/?key={steamApiKey}&appid=440&ugcid={id}"
+							class="underline" target="_blank">
+							{id}
+						</a>
+					{:else}
+						<div>{id}</div>
+					{/if}
 				{/each}
 			{/if}
 		</div>
@@ -122,7 +132,7 @@
 		</button>
 		<div class="flex gap-2">
 			<label for="apikey">
-				Steam API Key
+				Steam API Key (optional)
 			</label>
 			<button onclick={() => steamApiInfoOpen = true}
 				class="bg-slate-700 w-6 rounded-lg">
@@ -132,13 +142,9 @@
 				class="flex-grow border-b border-gray-400 outline-none" />
 		</div>
 		<div>
-			<button disabled={files.length === 0 || !steamApiKey}
-				class="bg-slate-700 rounded-lg px-2 py-1">
-				Extract Decals
-			</button>
 			<button disabled={files.length === 0}
 				class="bg-slate-700 rounded-lg px-2 py-1"
-				onclick={startParse}>
+				onclick={() => startParse()}>
 				Extract Decal Ids
 			</button>
 		</div>
@@ -150,7 +156,7 @@
 						<progress max={files.length} value={parsed}></progress>
 					</div>
 				{/if}
-				<div class="flex flex-wrap gap-2">
+				<div class="grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))">
 					{#each output as demo}
 						{@render demoDisplay(demo)}
 					{/each}
